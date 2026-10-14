@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: webwin
+    runtime: node
+    buildCommand: echo "no build"
+    startCommand: node server.js
+    envVars:
+      - key: ACCESS_KEY
+        sync: false

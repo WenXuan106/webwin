@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>WebWin</title>
+<style>
+:root{--bg:#1b2a41;--wall:linear-gradient(135deg,#0b3d91,#1e88e5 45%,#7e57c2);--glass:rgba(243,243,243,.82);--ink:#1a1a1a;--line:rgba(0,0,0,.12);--win:#fff;--accent:#0067c0;--hover:rgba(0,0,0,.07);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--glass:rgba(32,32,32,.85);--ink:#f2f2f2;--line:rgba(255,255,255,.14);--win:#2b2b2b;--accent:#4cc2ff;--hover:rgba(255,255,255,.09)}}
+:root[data-theme="dark"]{--glass:rgba(32,32,32,.85);--ink:#f2f2f2;--line:rgba(255,255,255,.14);--win:#2b2b2b;--accent:#4cc2ff;--hover:rgba(255,255,255,.09)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;font:14px "Segoe UI",system-ui,-apple-system,sans-serif;color:var(--ink);user-select:none}
+body{background:var(--bg)}
+#desk{position:absolute;inset:0;background:var(--wall) center/cover}
+#icons{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;display:grid;gap:6px;grid-auto-flow:row}
+.ico{width:80px;padding:8px 4px;border-radius:6px;text-align:center;color:#fff;text-shadow:0 1px 3px #000a;cursor:default;background:none;border:0;font:inherit}
+.ico:hover,.ico:focus-visible{background:rgba(255,255,255,.18);outline:none}
+.ico b{display:block;font-size:30px;font-weight:400;line-height:1.2}
+.win{position:absolute;background:var(--win);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 40px #0006;display:flex;flex-direction:column;overflow:hidden;min-width:260px;min-height:160px}
+.win.max{inset:0 0 48px 0 !important;width:auto !important;height:auto !important;border-radius:0}
+.win.min{display:none}
+.tb{display:flex;align-items:center;height:36px;background:var(--glass);padding-left:12px;cursor:default;touch-action:none}
+.tb span{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.tb button{width:44px;height:36px;border:0;background:none;color:inherit;font-size:14px}
+.tb button:hover{background:var(--hover)}.tb button.x:hover{background:#c42b1c;color:#fff}
+.body{flex:1;overflow:auto;position:relative;user-select:text}
+textarea{width:100%;height:100%;border:0;resize:none;padding:10px;background:var(--win);color:var(--ink);font:14px Consolas,monospace;outline:none}
+.calc{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:8px;height:100%}
+.calc output{grid-column:1/-1;text-align:right;font-size:30px;padding:8px;min-height:56px;overflow:hidden}
+.calc button{border:0;border-radius:6px;background:var(--hover);color:inherit;font-size:18px}
+.calc button:hover{background:var(--line)}.calc .eq{background:var(--accent);color:#fff}
+.paintbar{display:flex;gap:10px;align-items:center;padding:6px 10px;background:var(--glass);border-bottom:1px solid var(--line)}
+.paintbar button{padding:4px 10px;border:1px solid var(--line);background:none;color:inherit;border-radius:5px}
+canvas{display:block;background:#fff;touch-action:none;cursor:crosshair}
+.fl{padding:6px}.fl .path{padding:6px 10px;color:var(--accent)}
+.fl button{display:flex;gap:10px;width:100%;padding:8px 10px;border:0;background:none;color:inherit;text-align:left;font:inherit;border-radius:6px}
+.fl button:hover{background:var(--hover)}
+.set{padding:16px;display:grid;gap:14px}.set h3{margin:0 0 6px;font-weight:600}
+.set .row{display:flex;gap:8px;flex-wrap:wrap}.set button{padding:8px 14px;border:1px solid var(--line);background:none;color:inherit;border-radius:6px}
+.sw{width:64px;height:40px;border-radius:6px}
+#task{position:absolute;left:0;right:0;bottom:env(safe-area-inset-bottom,0px);height:48px;background:var(--glass);backdrop-filter:blur(20px);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 8px;gap:4px;z-index:9999}
+#task .mid{flex:1;display:flex;justify-content:center;gap:4px;overflow:hidden}
+#task button{height:38px;min-width:40px;border:0;border-radius:6px;background:none;color:inherit;font-size:20px;padding:0 10px;border-bottom:3px solid transparent}
+#task button:hover{background:var(--hover)}#task button.on{border-bottom-color:var(--accent);background:var(--hover)}
+#clock{font-size:12px;text-align:right;line-height:1.2;padding:0 8px;white-space:nowrap}
+#menu{position:absolute;left:50%;bottom:58px;transform:translateX(-50%);width:min(440px,94vw);background:var(--glass);backdrop-filter:blur(24px);border:1px solid var(--line);border-radius:12px;padding:16px;z-index:9998;display:none;box-shadow:0 12px 40px #0005}
+#menu.open{display:block}
+#menu h4{margin:0 0 10px;font-weight:600}
+#menu .g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#menu .g button{border:0;background:none;color:inherit;padding:12px 4px;border-radius:8px;font:inherit}
+#menu .g button:hover{background:var(--hover)}#menu .g b{display:block;font-size:28px;font-weight:400}
+#menu .foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);display:flex;justify-content:space-between}
+#menu .foot button{border:0;background:none;color:inherit;padding:6px 10px;border-radius:6px}#menu .foot button:hover{background:var(--hover)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.paintbar input.url{flex:1;min-width:0;padding:6px 12px;border:1px solid var(--line);border-radius:16px;background:var(--win);color:var(--ink)}
+.pg{padding:16px;user-select:text}.pg h3{margin:0 0 10px}.pg button{display:block;margin:6px 0;padding:8px 14px;border:1px solid var(--line);background:none;color:inherit;border-radius:6px;font:inherit}.pg button:hover{background:var(--hover)}.pg a{color:var(--accent)}
+#toast{position:fixed;bottom:60px;right:12px;background:var(--glass);border:1px solid var(--line);padding:10px 14px;border-radius:8px;z-index:10000;opacity:0;transition:opacity .2s;pointer-events:none;backdrop-filter:blur(20px)}
+@media (prefers-reduced-motion:no-preference){.win{animation:pop .14s ease-out}@keyframes pop{from{transform:scale(.96);opacity:0}}}
+</style>
+</head>
+<body>
+<div id="desk"><div id="icons"></div></div>
+<div id="menu"><h4>Apps</h4><div class="g" id="mg"></div><div class="foot"><span>Guest</span><button id="reset">Close all windows</button></div></div>
+<div id="task"><button id="start" title="Start" aria-label="Start">⊞</button><div class="mid" id="mid"></div><div id="clock"></div></div>
+<script>
+const $=s=>document.querySelector(s);
+const files={Documents:{"readme.txt":"Welcome to WebWin.\nThis is a Windows-style desktop that runs in your browser.","todo.txt":"1. Try Paint\n2. Do some maths\n3. Change the wallpaper"},Pictures:{},Desktop:{},Downloads:{}};
+const walls=["linear-gradient(135deg,#0b3d91,#1e88e5 45%,#7e57c2)","linear-gradient(160deg,#0f2027,#2c5364)","linear-gradient(135deg,#f7971e,#ffd200 40%,#ee5a6f)"];
+let z=10,n=0;const wins=new Map();
+let tt;function toast(m){let t=$("#toast");if(!t){t=document.createElement("div");t.id="toast";t.setAttribute("role","status");document.body.append(t)}t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,3500)}
+const isD=v=>v&&typeof v==="object"&&!(v instanceof Blob);
+async function dl(name,data){try{const bl=data instanceof Blob?data:new Blob([data]);const a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);files.Downloads[name]="Saved to your device: "+name;toast("Downloaded "+name)}catch(e){toast("Couldn't download "+name)}}
+const apps={
+ notepad:{name:"Notepad",i:"📝",w:480,h:340,build(b,o,ti){b.style.cssText="display:flex;flex-direction:column";const bar=document.createElement("div");bar.className="paintbar";const s=document.createElement("button");s.textContent="Download as .txt";bar.append(s);const t=document.createElement("textarea");t.value=o||"";t.placeholder="Start typing…";t.style.cssText="flex:1;height:auto;min-height:0";s.onclick=()=>dl((ti||"note.txt").replace(/(\.txt)?$/,".txt"),t.value||" ");b.append(bar,t)}},
+ browser:{name:"Browser",i:"🌐",w:560,h:420,build(b){
+  b.innerHTML='<div class="paintbar"><input class="url" value="webwin://home" aria-label="Address"><button>Go</button></div><div class="pg"></div>';
+  const u=b.querySelector(".url"),pg=b.querySelector(".pg");
+  const items={"hello.txt":"Hello from WebWin!\n","budget.csv":"item,cost\nCoffee,4\nBooks,20\n","data.json":'{"app":"WebWin","ok":true}',"logo.svg":'<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" rx="20" fill="#0067c0"/><text x="60" y="76" font-size="48" text-anchor="middle" fill="#fff">W</text></svg>'};
+  const go=v=>{v=v.trim();if(!v.includes("://"))v="webwin://search?q="+encodeURIComponent(v);u.value=v;pg.textContent="";pg.style.padding="";
+   const h=document.createElement("h3"),p=document.createElement("p");pg.append(h,p);
+   if(v==="webwin://home"){h.textContent="WebWin Home";const a=document.createElement("a");a.href="#";a.dataset.go="webwin://downloads";a.textContent="Downloads";p.append("Pages that work here: ",a)}
+   else if(v==="webwin://downloads"){h.textContent="Downloads";p.textContent="Pick a file to save to your device.";Object.keys(items).forEach(k=>{const r=document.createElement("button");r.textContent="⬇ "+k;r.dataset.dl=k;pg.append(r)});
+    const ur=document.createElement("input");ur.className="url";ur.placeholder="https://example.com/setup.exe";ur.setAttribute("aria-label","File URL");ur.style.cssText="width:100%;margin-top:12px;padding:8px";const gb=document.createElement("button");gb.textContent="Download from URL";gb.onclick=async()=>{try{const r=await fetch("/proxy?url="+encodeURIComponent(ur.value));if(!r.ok)throw 0;dl(decodeURIComponent(new URL(ur.value).pathname.split("/").pop())||"download.bin",await r.blob())}catch{toast("Couldn't fetch that file. The site may block requests from other pages (CORS).")}};pg.append(ur,gb)}
+   else if(/^https?:\/\//i.test(v)){pg.textContent="";pg.style.padding="0";const f=document.createElement("iframe");f.src="/proxy?url="+encodeURIComponent(v);f.style.cssText="width:100%;height:100%;border:0;background:#fff";f.setAttribute("sandbox","allow-scripts allow-forms allow-popups allow-downloads");pg.append(f)}
+   else{h.textContent="Page not found";p.textContent="Try an address starting with https://, or webwin://home."}};
+  pg.onclick=e=>{const g=e.target.closest("[data-go]"),d=e.target.closest("[data-dl]");if(g){e.preventDefault();go(g.dataset.go)}if(d)dl(d.dataset.dl,items[d.dataset.dl])};
+  u.onkeydown=e=>{if(e.key==="Enter")go(u.value)};b.querySelector("button").onclick=()=>go(u.value);go("webwin://home")}},
+ calc:{name:"Calculator",i:"🧮",w:280,h:380,build(b){
+  b.innerHTML='<div class="calc"><output>0</output></div>';const g=b.firstChild,out=g.firstChild;let s="";
+  "C ⌫ % ÷ 7 8 9 × 4 5 6 − 1 2 3 + 0 . = ".trim().split(" ").forEach(k=>{const e=document.createElement("button");e.textContent=k;if(k==="=")e.className="eq";e.onclick=()=>{
+   if(k==="C")s="";else if(k==="⌫")s=s.slice(0,-1);else if(k==="="){try{const x=s.replace(/÷/g,"/").replace(/×/g,"*").replace(/−/g,"-").replace(/(\d+(\.\d+)?)%/g,"($1/100)");if(!/^[\d+\-*/().\s]+$/.test(x))throw 0;s=String(+Function('"use strict";return('+x+')')().toFixed(10))}catch{s="Error"}}
+   else{if(s==="Error")s="";s+=k}out.textContent=s||"0"};g.append(e)})}},
+ paint:{name:"Paint",i:"🎨",w:520,h:400,build(b){
+  b.innerHTML='<div class="paintbar"><input type="color" value="#0067c0" aria-label="Colour"><input type="range" min="1" max="30" value="4" aria-label="Brush size"><button>Clear</button><button id="ps">Download PNG</button></div><canvas></canvas>';
+  const [c,r]=[b.querySelector("canvas"),b.querySelector("[type=range]")],col=b.querySelector("[type=color]"),x=c.getContext("2d");
+  const fit=()=>{const d=x.getImageData(0,0,c.width,c.height);c.width=b.clientWidth;c.height=Math.max(100,b.clientHeight-46);x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.putImageData(d,0,0)};
+  new ResizeObserver(fit).observe(b);let on=false;
+  const p=e=>{const k=c.getBoundingClientRect();return[e.clientX-k.left,e.clientY-k.top]};
+  c.onpointerdown=e=>{on=true;c.setPointerCapture(e.pointerId);x.beginPath();x.moveTo(...p(e))};
+  c.onpointermove=e=>{if(!on)return;x.lineWidth=r.value;x.lineCap="round";x.strokeStyle=col.value;x.lineTo(...p(e));x.stroke()};
+  c.onpointerup=()=>on=false;
+  b.querySelector("button").onclick=()=>{x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height)};b.querySelector("#ps").onclick=()=>c.toBlob(bl=>dl("drawing.png",bl))}},
+ files:{name:"Files",i:"📁",w:420,h:340,build(b){let path=[];const draw=()=>{let d=files;path.forEach(p=>d=d[p]);b.innerHTML='<div class="fl"><div class="path">This PC'+path.map(p=>" › "+p).join("")+'</div></div>';const w=b.firstChild;
+   if(path.length)w.append(btn("⬆️","Up",()=>{path.pop();draw()}));
+   const up=document.createElement("input");up.type="file";up.multiple=true;up.setAttribute("aria-label","Add files");up.onchange=()=>{[...up.files].forEach(f=>d[f.name]=f);draw()};w.append(up);const ks=Object.keys(d);if(!ks.length){const e=document.createElement("div");e.className="path";e.style.color="inherit";e.textContent="This folder is empty.";w.append(e)}
+   ks.forEach(k=>w.append(btn(isD(d[k])?"📁":"📄",k,()=>{if(isD(d[k])){path.push(k);draw()}else if(d[k] instanceof Blob)dl(k,d[k]);else open("notepad",{value:d[k],title:k})})))};
+   const btn=(i,t,f)=>{const e=document.createElement("button");e.innerHTML=i+" <span></span>";e.lastChild.textContent=t;e.onclick=f;return e};draw()}},
+ settings:{name:"Settings",i:"⚙️",w:400,h:320,build(b){
+  b.innerHTML='<div class="set"><div><h3>Wallpaper</h3><div class="row" id="ws"></div></div><div><h3>Theme</h3><div class="row"><button data-t="light">Light</button><button data-t="dark">Dark</button></div></div></div>';
+  walls.forEach(w=>{const e=document.createElement("button");e.className="sw";e.style.background=w;e.setAttribute("aria-label","Set wallpaper");e.onclick=()=>$("#desk").style.background=w+" center/cover";b.querySelector("#ws").append(e)});
+  b.querySelectorAll("[data-t]").forEach(e=>e.onclick=()=>document.documentElement.dataset.theme=e.dataset.t)}}
+};
+function open(id,o){const a=apps[id],el=document.createElement("div"),k=++n;el.className="win";
+ const W=Math.min(a.w,innerWidth-16),H=Math.min(a.h,innerHeight-80);
+ Object.assign(el.style,{width:W+"px",height:H+"px",left:Math.max(8,40+(k%6)*28)+"px",top:Math.max(8,30+(k%6)*28)+"px",zIndex:++z});
+ el.innerHTML='<div class="tb"><span></span><button data-a="m" aria-label="Minimise">–</button><button data-a="x2" aria-label="Maximise">☐</button><button class="x" data-a="c" aria-label="Close">✕</button></div><div class="body"></div>';
+ const body=el.querySelector(".body");let title=a.name;
+ if(id==="notepad"&&o){a.build(body,o.value,o.title);title=o.title+" – Notepad"}else a.build(body);
+ el.querySelector("span").textContent=a.i+"  "+title;
+ const tb=el.querySelector(".tb"),t=document.createElement("button");t.textContent=a.i;t.title=title;
+ t.onclick=()=>{el.classList.contains("min")||el.style.zIndex==z?(el.classList.toggle("min"),sync()):(el.classList.remove("min"),front())};
+ const front=()=>{el.style.zIndex=++z;sync()};
+ el.addEventListener("pointerdown",front,true);
+ tb.onclick=e=>{const x=e.target.dataset.a;if(x==="c"){el.remove();t.remove();wins.delete(k)}else if(x==="m"){el.classList.add("min");sync()}else if(x==="x2")el.classList.toggle("max")};
+ tb.ondblclick=e=>{if(!e.target.dataset.a)el.classList.toggle("max")};
+ tb.onpointerdown=e=>{if(e.target.dataset.a||el.classList.contains("max"))return;const dx=e.clientX-el.offsetLeft,dy=e.clientY-el.offsetTop;tb.setPointerCapture(e.pointerId);
+  tb.onpointermove=m=>{el.style.left=Math.max(-W+60,m.clientX-dx)+"px";el.style.top=Math.max(0,Math.min(innerHeight-90,m.clientY-dy))+"px"};tb.onpointerup=()=>{tb.onpointermove=null}};
+ $("#desk").append(el);$("#mid").append(t);wins.set(k,{el,t});sync();$("#menu").classList.remove("open")}
+function sync(){wins.forEach(({el,t})=>t.classList.toggle("on",!el.classList.contains("min")&&+el.style.zIndex===z))}
+Object.entries(apps).forEach(([id,a])=>{
+ const i=document.createElement("button");i.className="ico";i.innerHTML="<b>"+a.i+"</b>"+a.name;i.ondblclick=()=>open(id);i.onkeydown=e=>{if(e.key==="Enter")open(id)};$("#icons").append(i);
+ const m=document.createElement("button");m.innerHTML="<b>"+a.i+"</b>"+a.name;m.onclick=()=>open(id);$("#mg").append(m)});
+$("#start").onclick=e=>{e.stopPropagation();$("#menu").classList.toggle("open")};
+document.addEventListener("pointerdown",e=>{if(!e.target.closest("#menu,#start"))$("#menu").classList.remove("open")});
+$("#reset").onclick=()=>{wins.forEach(({el,t})=>{el.remove();t.remove()});wins.clear();$("#menu").classList.remove("open")};
+const tick=()=>{const d=new Date();$("#clock").innerHTML=d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})+"<br>"+d.toLocaleDateString()};tick();setInterval(tick,15000);
+open("notepad",{value:files.Documents["readme.txt"],title:"readme.txt"});
+</script>
+</body>
+</html>
